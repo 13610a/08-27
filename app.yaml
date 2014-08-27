@@ -1,5 +1,5 @@
-application: uos-pusher
-version: v2
+application: a08-27
+version: v3
 runtime: python27
 api_version: 1
 threadsafe: true
