@@ -1,18 +1,24 @@
 $(function() {
+    // 3-3 delete start
+    /*
     var pusher = new Pusher(PUSHER_KEY),
-        testChannel =pusher.subscribe('test'),
-        broadcast = pusher.subscribe('br'), // 1-1 add
-        $window = $(window),                // 1-1 add
+        testChannel = pusher.subscribe('uos-pusher'),
+        broadcast = pusher.subscribe('br'),
+        $window = $(window),
+    */
+    // 3-3 delete end
+    var $window = $(window),    // 3-4 add
+        $usernameInput = $('.usernameInput[name=username]'),
         $messages = $('.messages'),
         $inputMessage = $('.inputMessage'),
-        $usernameInput = $('.usernameInput[name=username]'),    
         $loginPage = $('.login.page'),
-        $chatPage = $('.chat.page');  
+        $chatPage = $('.chat.page');
 
 
-    var username;           
+    var username;
 
-$usernameInput.focus();
+    $usernameInput.focus();
+
     /*
     $.ajax({
       type: "POST",
@@ -23,10 +29,29 @@ $usernameInput.focus();
     });
     */
 
+    // 3-5 delete start
+    /*
     broadcast.bind('new_message', function(data) {
-        data['username'] = "Your Name";
         addChatMessage(data);
     });
+    */
+    // 3-5 delete end
+
+    // 3-6 add start
+    function startPusher() {
+        var pusher = new Pusher(PUSHER_KEY),
+            testChannel = pusher.subscribe('test_channel'),
+            broadcast = pusher.subscribe('br');
+
+        broadcast.bind('new_message', function(data) {
+            addChatMessage(data);
+        });
+
+        broadcast.bind('user_joined', function(data) {
+            log(data.username + ' joined');
+        });
+    }
+    // 3-6 add end
 
     function addChatMessage(data) {
         var $usernameDiv = $('<span class="username"></span>');
@@ -69,7 +94,8 @@ $usernameInput.focus();
         // if there is a non-empty message
         if (message) {
             $inputMessage.val('');
-        $.post('/api/call/new_message', {
+
+            $.post('/api/call/new_message', {
                 "message": message,
                 "username": username
             });
@@ -81,22 +107,59 @@ $usernameInput.focus();
 
         // If the username is valid
         if (__username) {
+            // 3-7 delete start
+            /*
             username = __username;
             $loginPage.fadeOut();
             $chatPage.show();
-            $inputMessage.focus();    
+            $inputMessage.focus();
+            */
+            // 3-7 delete end
+
+            // 3-8 add start
+            $.post("/api/start", {
+                    'username': __username,
+                },
+                function(data) {
+                    if (data.status == 0) {
+                        username = __username;
+                        $loginPage.fadeOut();
+                        $chatPage.show();
+                        $inputMessage.focus();
+
+                        startPusher();
+                        connected = true;
+                        // Display the welcome message
+                        var message = "Welcome to Chat &mdash; ";
+                        log(message);
+                    } else {
+                        alert("error");
+                    }
+                }, "json"
+            );
+            // 3-8 add end
         }
     }
+
+    // 3-9 add start
+    function log(message, options) {
+        var el = '<li class="log">' + message + '</li>';
+        addMessageElement(el, options);
+    }
+    // 3-9 add end
 
     $window.keydown(function(event) {
         // When the client hits ENTER on their keyboard
         if (event.which === 13) {
+
             if (username) {
                 sendMessage();
             } else {
                 setUsername();
                 $usernameInput.blur();
             }
+
         }
     });
+
 });
